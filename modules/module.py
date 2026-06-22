@@ -15,6 +15,7 @@ class Module:
             module_id: Unique module identifier
             name: Descriptive module name
             energy_consumption: Energy needed for operation (kWh)
+            position: Position of the module
             priority: Importance level (1-10, where 10 is most important)
             storage_capacity: Storage capacity (kWh)
             communication_need: Communication frequency (1-10)
