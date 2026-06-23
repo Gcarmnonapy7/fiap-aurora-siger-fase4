@@ -88,7 +88,7 @@ class Dijkstra:
                 
                 print(f"Shortest path from {start} to {end}: {' -> '.join(path)} with total distance: {distances[end]}")
                 
-                return path, distances[end]
+                return (path, distances[end])
             
     def get_all_paths(self,start:str) -> Dict[str, Tuple[List[str], float]]:
         """
@@ -102,3 +102,9 @@ class Dijkstra:
         
         results = {}
         
+        for end in self.graph.modules:
+            if start != end:
+                path, distance = self.shortest_path(start, end)
+                results[end] = (path, distance)
+        
+        return results
