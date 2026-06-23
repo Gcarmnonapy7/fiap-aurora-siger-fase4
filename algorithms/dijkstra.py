@@ -102,6 +102,10 @@ class Dijkstra:
         
         results = {}
         
+        if start not in self.graph.modules:
+            print(f"Start module {start} does not exist in the graph.")
+            return results
+        
         for end in self.graph.modules:
             if start != end:
                 path, distance = self.shortest_path(start, end)
