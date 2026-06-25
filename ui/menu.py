@@ -11,6 +11,7 @@ from modules.module import Module
 from algorithms.analysis import SearchAlgorithms, NetworkAnalysis
 from algorithms.dijkstra import Dijkstra
 from modeling.math import MathematicalModeling
+from visualization.network_viz import NetworkVisualization
 
 class MenuSIGIC:
     """
@@ -27,6 +28,7 @@ class MenuSIGIC:
         self.analysis = NetworkAnalysis(graph)
         self.dijkstra = Dijkstra(graph)
         self.modeling = MathematicalModeling(graph)
+        self.visualization = NetworkVisualization(graph)
         
         # System state
         self.selected_module: Optional[str] = None
@@ -135,7 +137,11 @@ class MenuSIGIC:
                     type_icon = self._get_type_icon(conn_type)
                     print(f"  {type_icon} {self.graph.modules[id1].name} <-> {self.graph.modules[id2].name}")
                     print(f"     Distancia: {weight:.1f} unidades  |  Tipo: {conn_type}")
-        
+
+        # Estatisticas gerais da rede (modulo de visualizacao)
+        print("\n" + "-" * 70)
+        print(self.visualization.generate_statistics())
+
         print("\n" + "=" * 70)
         input("\nPressione ENTER para voltar ao menu...")
     
@@ -284,10 +290,11 @@ class MenuSIGIC:
             print(" 2. DFS - Busca em Profundidade")
             print(" 3. Dijkstra - Caminho Minimo")
             print(" 4. Dijkstra - Caminho com Restricoes de Prioridade")
-            print(" 5. Analise de Eficiencia da Rede")
-            print(" 6. Detectar Pontos Criticos")
-            print(" 7. Analise de Centralidade")
-            print(" 8. Componentes Conexos")
+            print(" 5. Dijkstra - Caminhos Minimos para Todos os Destinos")
+            print(" 6. Analise de Eficiencia da Rede")
+            print(" 7. Detectar Pontos Criticos")
+            print(" 8. Analise de Centralidade")
+            print(" 9. Componentes Conexos")
             print(" 0. Voltar")
             print("=" * 70)
             
@@ -305,12 +312,14 @@ class MenuSIGIC:
                 elif option == '4':
                     self._execute_dijkstra_constraints()
                 elif option == '5':
-                    self._analyze_efficiency()
+                    self._execute_dijkstra_all()
                 elif option == '6':
-                    self._detect_critical_points()
+                    self._analyze_efficiency()
                 elif option == '7':
-                    self._analyze_centrality()
+                    self._detect_critical_points()
                 elif option == '8':
+                    self._analyze_centrality()
+                elif option == '9':
                     self._list_components()
                 else:
                     self._display_error("Opcao invalida!")
@@ -447,6 +456,36 @@ class MenuSIGIC:
         print("\n" + "=" * 70)
         input("\nPressione ENTER para continuar...")
     
+    def _execute_dijkstra_all(self):
+        """Executes Dijkstra from one origin to all reachable destinations."""
+        self._clear_screen()
+        print("\n" + "=" * 70)
+        print("DIJKSTRA - CAMINHOS MINIMOS PARA TODOS OS DESTINOS")
+        print("=" * 70)
+
+        origin = self._select_module("Modulo de origem")
+        if not origin:
+            return
+
+        results = self.dijkstra.find_all_paths(origin)
+
+        print(f"\nOrigem: {self.graph.modules[origin].name}")
+        print("-" * 70)
+
+        if not results:
+            print("\nNenhum destino alcancavel a partir deste modulo.")
+        else:
+            # Sorted by distance (closest first) for a readable summary table.
+            ordered = sorted(results.items(), key=lambda item: item[1][1])
+            print(f"\n{'Destino':22} | {'Dist.':>5} | Rota")
+            print("-" * 70)
+            for destination, (path, distance) in ordered:
+                route = ' -> '.join(self.graph.modules[m].name for m in path)
+                print(f"{self.graph.modules[destination].name:22} | {distance:5.1f} | {route}")
+
+        print("\n" + "=" * 70)
+        input("\nPressione ENTER para continuar...")
+
     def _analyze_efficiency(self):
         """Analyzes network efficiency."""
         self._clear_screen()
@@ -481,11 +520,11 @@ class MenuSIGIC:
             for mod in efficiency['critical_modules']:
                 print(f"  * {mod}")
         
-        if efficiency['critical_connections']:
-            print(f"\nCONEXOES CRITICAS:")
+        if efficiency['articulation_points']:
+            print(f"\nPONTOS DE ARTICULACAO (vertices criticos):")
             print("-" * 40)
-            for conn in efficiency['critical_connections']:
-                print(f"  * {conn}")
+            for ponto in efficiency['articulation_points']:
+                print(f"  * {ponto}")
         
         print("\n" + "=" * 70)
         input("\nPressione ENTER para continuar...")
@@ -704,10 +743,9 @@ class MenuSIGIC:
         print("\nANALISE DE PERDAS:")
         print("-" * 40)
         
-        distances = set()
-        for id1, id2 in self.graph.edge_weights:
-            weight = self.graph.edge_weights[(id1, id2)]
-            distances.add(weight)
+        # edge_weights mapeia chave "id1-id2" (string) -> peso.
+        # Como so precisamos dos pesos (distancias), iteramos os valores.
+        distances = set(self.graph.edge_weights.values())
         
         print("\nDistancia | Perda | Eficiencia")
         print("-" * 40)

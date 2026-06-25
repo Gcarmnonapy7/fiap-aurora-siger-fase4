@@ -193,9 +193,9 @@ class NetworkAnalysis:
             if module.priority >= 8 and len(self.graph.get_neighbors(module_id)) <= 2:
                 critical_modules.append(module.name)
         
-        # Articulation points
+        # Articulation points (critical vertices whose removal disconnects the network)
         articulations = self.detect_critical_points()
-        critical_connections = [self.graph.modules[art].name for art in articulations if art in self.graph.modules]
+        articulation_points = [self.graph.modules[art].name for art in articulations if art in self.graph.modules]
         
         # Clustering coefficient
         clustering_coefficient = self._calculate_clustering_coefficient()
@@ -216,7 +216,7 @@ class NetworkAnalysis:
             'communication_efficiency': communication_efficiency,
             'energy_efficiency': energy_efficiency,
             'critical_modules': critical_modules,
-            'critical_connections': critical_connections,
+            'articulation_points': articulation_points,
             'clustering_coefficient': clustering_coefficient,
             'avg_edge_weight': avg_weight,
             'max_edge_weight': max_weight,
