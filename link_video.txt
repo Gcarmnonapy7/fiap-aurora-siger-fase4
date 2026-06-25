@@ -1,4 +1,1 @@
-[PENDENTE] Substituir pela URL do video de apresentacao publicado no YouTube como "Nao listado".
-
-Exemplo do formato esperado:
-https://www.youtube.com/watch?v=XXXXXXXXXXX
+https://youtu.be/7fYAYqIvTPo
