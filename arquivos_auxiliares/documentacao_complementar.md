@@ -123,8 +123,13 @@ mais eficiente:
 | Representação | Atributo | Usada para |
 |---|---|---|
 | Lista de adjacência | `adjacency_list` (`dict` de listas) | Percorrer vizinhos em BFS/DFS/Dijkstra — eficiente em grafos esparsos |
-| Matriz de adjacência | `adjacency_matrix` (lista de listas) | Consulta direta da relação entre dois módulos em O(1) |
+| Matriz de adjacência | `adjacency_matrix` (lista de listas) | Consulta direta do peso entre dois módulos em O(1); exibida no menu "Matriz de Adjacência" (opção 9) |
 | Matriz de distâncias | `distance_matrix` | Referência rápida de pesos entre pares |
+
+A matriz de adjacência é construída e mantida a cada inserção (`grafo.py`,
+`_update_matrix`) e **efetivamente consumida** pela funcionalidade "Matriz de Adjacência"
+do menu principal, que a percorre para apresentar, em tempo $O(1)$ por célula, o peso de
+qualquer par de módulos — complementando a lista de adjacência usada pelos algoritmos de busca.
 
 \newpage
 
@@ -234,10 +239,16 @@ o mínimo ocorre em $t = 0$. Isso é interpretado pelo sistema em
 
 ## 6.4 Relação com o funcionamento da colônia
 
-O modelo permite **prever quando a demanda energética se aproximará da capacidade total** da
-base (`predict_critical_point`) e simular **cenários** otimista (8%), moderado (12%) e
-pessimista (18%) de crescimento (`simulate_scenarios`). Esses resultados orientam decisões de
-**expansão** e **investimento em eficiência** antes que a colônia atinja um ponto crítico.
+O modelo permite **prever quando a demanda energética se aproximará da capacidade instalada
+de geração** da base (`predict_critical_point`) e simular **cenários** otimista (8%), moderado
+(12%) e pessimista (18%) de crescimento (`simulate_scenarios`). É importante distinguir as
+grandezas físicas: o consumo e a geração são **potências** (kW), enquanto a capacidade de
+armazenamento dos módulos é **energia** (kWh) — por isso a previsão de ponto crítico compara o
+consumo projetado contra a capacidade de **geração** (`GENERATION_CAPACITY`, em `data_modules.py`),
+e não contra o armazenamento. Com consumo atual de ~785 kW e geração instalada de 2000 kW, a
+base opera com folga (~39%), e o ponto crítico (90% da geração) é projetado para ~2033 no
+cenário moderado. Esses resultados orientam decisões de **expansão** e **investimento em
+eficiência** antes que a colônia atinja um ponto crítico.
 
 ## 6.5 Otimização
 
@@ -331,12 +342,13 @@ O sistema oferece um **menu de terminal** com navegação simples:
 
 1. Visualizar Rede da Colônia
 2. Consultar Módulo
-3. Algoritmos de Rede (BFS, DFS, Dijkstra, eficiência, pontos críticos, centralidade)
+3. Algoritmos de Rede (BFS, DFS, Dijkstra, caminhos para todos os destinos, eficiência, pontos críticos, centralidade)
 4. Modelagem Matemática (projeção, perdas, derivadas, otimização, cenários)
 5. Sustentabilidade e Governança (ESG)
 6. Simulações Operacionais (falha, pico de consumo, expansão, otimização)
 7. Análise Completa
 8. Sobre o Sistema
+9. Matriz de Adjacência
 0. Sair
 
 Mensagens de entrada e saída são compreensíveis, com tratamento de entradas inválidas e
