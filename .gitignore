@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Artefatos de IDE / SO
+.vscode/
+.idea/
+.DS_Store
