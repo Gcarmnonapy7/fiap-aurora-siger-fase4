@@ -1,0 +1,51 @@
+graph AuroraSiger {
+  graph [label="Rede da Colonia Aurora Siger - SIGIC\nNos = modulos | Arestas = conexoes (peso = distancia)", labelloc="t", fontsize=20, fontname="Helvetica-Bold", bgcolor="#fbfbfb", splines=true, overlap=false];
+  node [shape=box, style="rounded,filled", fontname="Helvetica", fontcolor="white", fontsize=11, margin="0.18,0.10"];
+  edge [fontname="Helvetica-Bold", fontsize=18, fontcolor="black", penwidth=2.5];
+
+  "HAB-01" [label="Habitacao\nHAB-01 | P9 | 85 kWh", fillcolor="#c0392b", pos="0,0!"];
+  "CTR-01" [label="Centro de Controle\nCTR-01 | P10 | 120 kWh", fillcolor="#c0392b", pos="320,0!"];
+  "ARM-01" [label="Armazenamento de Energia\nARM-01 | P8 | 45 kWh", fillcolor="#e67e22", pos="160,160!"];
+  "OXI-01" [label="Producao de Oxigenio\nOXI-01 | P10 | 100 kWh", fillcolor="#c0392b", pos="160,480!"];
+  "MED-01" [label="Suporte Medico\nMED-01 | P9 | 65 kWh", fillcolor="#c0392b", pos="320,320!"];
+  "COM-01" [label="Comunicacao\nCOM-01 | P8 | 75 kWh", fillcolor="#e67e22", pos="0,320!"];
+  "AGR-01" [label="Agricultura\nAGR-01 | P7 | 95 kWh", fillcolor="#e67e22", pos="480,0!"];
+  "LAB-01" [label="Laboratorio Cientifico\nLAB-01 | P6 | 110 kWh", fillcolor="#5dade2", pos="640,0!"];
+  "REC-01" [label="Centro de Recreacao\nREC-01 | P4 | 40 kWh", fillcolor="#5dade2", pos="640,320!"];
+  "MAN-01" [label="Oficina de Manutencao\nMAN-01 | P5 | 50 kWh", fillcolor="#5dade2", pos="480,480!"];
+
+  "HAB-01" -- "CTR-01" [label="2", color="#e67e22"];
+  "HAB-01" -- "MED-01" [label="1", color="#2980b9"];
+  "HAB-01" -- "ARM-01" [label="3", color="#e67e22"];
+  "CTR-01" -- "ARM-01" [label="2", color="#e67e22"];
+  "CTR-01" -- "COM-01" [label="2", color="#2980b9"];
+  "CTR-01" -- "LAB-01" [label="3", color="#2980b9"];
+  "ARM-01" -- "OXI-01" [label="3", color="#e67e22"];
+  "ARM-01" -- "AGR-01" [label="2", color="#e67e22"];
+  "MED-01" -- "OXI-01" [label="2", color="#27ae60"];
+  "HAB-01" -- "AGR-01" [label="4", color="#2980b9"];
+  "AGR-01" -- "LAB-01" [label="2", color="#2980b9"];
+  "AGR-01" -- "OXI-01" [label="3", color="#27ae60"];
+  "LAB-01" -- "COM-01" [label="3", color="#2980b9"];
+  "COM-01" -- "MED-01" [label="3", color="#2980b9"];
+  "CTR-01" -- "MED-01" [label="3", color="#2980b9"];
+  "REC-01" -- "LAB-01" [label="2", color="#e67e22"];
+  "REC-01" -- "COM-01" [label="3", color="#e67e22"];
+  "MAN-01" -- "ARM-01" [label="2", color="#e67e22"];
+  "MAN-01" -- "AGR-01" [label="3", color="#e67e22"];
+  "MAN-01" -- "OXI-01" [label="2", color="#e67e22"];
+
+  subgraph cluster_legenda {
+    label="Legenda"; fontname="Helvetica-Bold"; fontsize=12; color="#bdc3c7"; style="rounded";
+    node [shape=plaintext, fillcolor="none", fontcolor="black", fontsize=10];
+    leg [pos="992.0,240.0!", label=<
+      <table border="0" cellborder="0" cellspacing="2">
+        <tr><td bgcolor="#c0392b" width="16"></td><td align="left">Prioridade 9-10 (critico)</td></tr>
+        <tr><td bgcolor="#e67e22" width="16"></td><td align="left">Prioridade 7-8 (importante)</td></tr>
+        <tr><td bgcolor="#5dade2" width="16"></td><td align="left">Prioridade &lt;= 6 (apoio)</td></tr>
+        <tr><td><font color="#e67e22">&#9472;&#9472;</font></td><td align="left">Conexao de energia</td></tr>
+        <tr><td><font color="#2980b9">&#9472;&#9472;</font></td><td align="left">Conexao de dados</td></tr>
+        <tr><td><font color="#27ae60">&#9472;&#9472;</font></td><td align="left">Suporte a vida</td></tr>
+      </table>>];
+  }
+}
