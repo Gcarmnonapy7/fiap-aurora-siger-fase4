@@ -22,6 +22,16 @@ DEFAULT_MODULES = [
     ("MAN-01", "Oficina de Manutencao", 50, 5, 5, 4, "active"),
 ]
 
+# ==================== ENERGY GENERATION ====================
+# Installed power generation capacity of the colony, in kW (power, not stored energy).
+# Sum of the base's energy sources (solar arrays, nuclear reactor, wind turbines),
+# sized with a generous reserve margin as required for critical life-support
+# infrastructure. Used by the mathematical model to compare projected consumption
+# (kW) against the colony's ability to GENERATE power, instead of against storage
+# capacity (kWh). Current total consumption is ~785 kW, so the base operates at
+# ~39% of installed capacity, leaving headroom for failures and growth.
+GENERATION_CAPACITY = 2000  # kW
+
 # Dictionary with module positions for visualization
 MODULE_POSITIONS = {
     "HAB-01": (0, 0),

@@ -6,6 +6,7 @@ Includes differential calculus applications: rates of change, optimization, and 
 import math
 from typing import Dict, List, Tuple, Optional
 from modules.grafo import InfrastructureGraph
+from data.data_modules import GENERATION_CAPACITY
 
 class MathematicalModeling:
     """
@@ -16,6 +17,10 @@ class MathematicalModeling:
     def __init__(self, graph: InfrastructureGraph):
         self.graph = graph
         self.h = 0.001  # Step for numerical differentiation
+        # Installed generation capacity of the colony (kW). The critical point and
+        # scenarios compare projected CONSUMPTION (kW) against this, not against
+        # storage capacity (kWh), which is a different physical quantity.
+        self.generation_capacity = GENERATION_CAPACITY
     
     # ==================== BASE FUNCTIONS ====================
     
@@ -332,10 +337,24 @@ class MathematicalModeling:
             'final_consumption': data['consumption'][-1],
             'initial_consumption': data['consumption'][0],
             'total_growth': ((data['consumption'][-1] / data['consumption'][0]) - 1) * 100 if data['consumption'][0] > 0 else 0,
-            'avg_growth_rate': sum(data['growth_rate']) / len(data['growth_rate']) if data['growth_rate'] else 0,
+            # Effective annual growth rate (CAGR), independent of the sampling
+            # resolution: (final/initial)^(1/anos) - 1. For C(t)=C0*e^(rt) this is
+            # e^r - 1 (~12.75% for r=0.12), consistent with the scenario rates.
+            'avg_growth_rate': self._annual_growth_rate(data),
             'qualitative_analysis': self._qualitative_temporal_analysis(data)
         }
     
+    def _annual_growth_rate(self, data: Dict) -> float:
+        """
+        Effective annual growth rate (CAGR) of consumption over the analysed span,
+        in percent. Independent of the number of sample points used.
+        """
+        consumption = data['consumption']
+        years_span = data['times'][-1] if data['times'] else 0
+        if consumption and consumption[0] > 0 and years_span > 0:
+            return ((consumption[-1] / consumption[0]) ** (1 / years_span) - 1) * 100
+        return 0.0
+
     def _qualitative_temporal_analysis(self, data: Dict) -> str:
         """
         Qualitative analysis of the time series.
@@ -366,7 +385,7 @@ class MathematicalModeling:
     ----------------------------------------
     * Tendencia: {trend}
     * Comportamento: {concavity}
-    * Taxa media de crescimento: {sum(data['growth_rate']) / len(data['growth_rate']):.2f}%
+    * Taxa de crescimento anual: {self._annual_growth_rate(data):.2f}%
     
     Implicacoes para a Colonia:
     {self._generate_recommendations(trend, concavity)}
@@ -446,29 +465,28 @@ class MathematicalModeling:
     
     def predict_critical_point(self, t_max: int = 50) -> Dict:
         """
-        Predicts when consumption will reach a critical point.
-        
-        Uses the derivative to find where consumption exceeds maximum capacity.
+        Predicts when projected consumption will reach a critical fraction (90%)
+        of the colony's installed GENERATION capacity (kW vs kW).
         """
-        max_capacity = sum(module.capacity for module in self.graph.module_list)
+        generation_capacity = self.generation_capacity
         current_t = 0
         step = 0.5
-        
+
         while current_t < t_max:
             consumption = self.total_consumption(current_t)
-            if consumption >= max_capacity * 0.9:
+            if consumption >= generation_capacity * 0.9:
                 return {
                     'critical_year': 2026 + current_t,
                     'consumption': consumption,
-                    'capacity': max_capacity,
-                    'percentage': (consumption / max_capacity) * 100,
-                    'alert_level': 'Alto' if consumption / max_capacity > 0.95 else 'Medio'
+                    'capacity': generation_capacity,
+                    'percentage': (consumption / generation_capacity) * 100,
+                    'alert_level': 'Alto' if consumption / generation_capacity > 0.95 else 'Medio'
                 }
             current_t += step
-        
+
         return {
             'critical_year': None,
-            'message': 'Nao atingira capacidade critica nos proximos 50 anos.'
+            'message': f'Nao atingira capacidade critica de geracao nos proximos {t_max} anos.'
         }
     
     def simulate_scenarios(self) -> Dict:
@@ -505,14 +523,14 @@ class MathematicalModeling:
         Qualitatively analyzes a scenario.
         """
         final_consumption = sum(module.consumption for module in self.graph.module_list) * math.exp(rate * years)
-        total_capacity = sum(module.capacity for module in self.graph.module_list)
-        
-        if final_consumption > total_capacity:
-            return f"Cenario {name}: CRITICO - Demanda excedera capacidade em {years} anos"
-        elif final_consumption > total_capacity * 0.8:
-            return f"Cenario {name}: ATENCAO - Demanda proxima da capacidade em {years} anos"
+        generation_capacity = self.generation_capacity
+
+        if final_consumption > generation_capacity:
+            return f"Cenario {name}: CRITICO - Demanda excedera a geracao em {years} anos"
+        elif final_consumption > generation_capacity * 0.8:
+            return f"Cenario {name}: ATENCAO - Demanda proxima da geracao em {years} anos"
         else:
-            return f"Cenario {name}: SEGURO - Capacidade suficiente para {years} anos"
+            return f"Cenario {name}: SEGURO - Geracao suficiente para {years} anos"
     
     # ==================== COMPLETE ANALYSIS ====================
     
@@ -660,26 +678,33 @@ class MathematicalModeling:
         """
         Infrastructure growth prediction.
         """
-        consumption_projection = self.temporal_consumption_analysis(years=years, points=years * 10)
-        
-        # Projects need for new modules
         current_modules = self.graph.get_module_count()
+
+        # Fixed baseline: average consumption per module TODAY. As total consumption
+        # grows over time, the number of modules the base must support is the
+        # projected consumption divided by this fixed per-module baseline. Using a
+        # fixed baseline (not one recalculated each year) avoids the circular
+        # identity modules_needed == current_modules.
+        base_per_module = (
+            sum(m.consumption for m in self.graph.module_list) / current_modules
+            if current_modules > 0 else 0
+        )
+
+        # Consumption sampled at each integer year (0..years), so index t == year t.
+        projected_consumption = [self.total_consumption(float(t)) for t in range(years + 1)]
         needed = []
-        
-        for t in range(years):
-            avg_consumption = consumption_projection['data']['consumption'][t] / current_modules if current_modules > 0 else 0
-            if avg_consumption > 0:
-                modules_needed = int(consumption_projection['data']['consumption'][t] / avg_consumption)
+        for consumption in projected_consumption:
+            if base_per_module > 0:
+                needed.append(max(current_modules, math.ceil(consumption / base_per_module)))
             else:
-                modules_needed = current_modules
-            needed.append(modules_needed)
-        
+                needed.append(current_modules)
+
         return {
             'current_year': 2026,
-            'years': list(range(years)),
+            'years': list(range(years + 1)),
             'current_modules': current_modules,
             'modules_needed': needed,
-            'projected_consumption': consumption_projection['data']['consumption'],
+            'projected_consumption': projected_consumption,
             'expansion_needed': max(0, max(needed) - current_modules)
         }
     
