@@ -16,7 +16,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from modules.grafo import InfrastructureGraph
 from modules.module import Module
 from ui.menu import MenuSIGIC
-from data.data_modules import DEFAULT_MODULES, DEFAULT_CONNECTIONS, MODULE_POSITIONS
+from data.data_modules import (
+    DEFAULT_MODULES,
+    DEFAULT_CONNECTIONS,
+    MODULE_POSITIONS,
+    CONNECTION_TYPES,
+)
 
 class SIGICSystem:
     """
@@ -42,9 +47,16 @@ class SIGICSystem:
             position = MODULE_POSITIONS.get(data[0])
             graph.add_module(module, position)
         
-        # Adds connections using data from the data file
+        # Adds connections using data from the data file.
+        # CONNECTION_TYPES uses the literal "id1-id2" order of DEFAULT_CONNECTIONS,
+        # so we try that key first and fall back to the reversed order, then 'energy'.
         for id1, id2, weight in DEFAULT_CONNECTIONS:
-            graph.add_connection(id1, id2, weight)
+            connection_type = (
+                CONNECTION_TYPES.get(f"{id1}-{id2}")
+                or CONNECTION_TYPES.get(f"{id2}-{id1}")
+                or 'energy'
+            )
+            graph.add_connection(id1, id2, weight, connection_type)
         
         return graph
     
