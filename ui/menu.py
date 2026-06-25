@@ -567,10 +567,54 @@ class MenuSIGIC:
         else:
             print("  A rede e resiliente a falhas individuais.")
             print("  Estrutura bem projetada para suportar contingencias.")
-        
+
+        # Didactic demonstration: a small network that DOES have articulation
+        # points, so the algorithm shows a positive case even quando a rede real
+        # e robusta. Dois setores em triangulo unidos por uma unica conexao.
+        print("\n" + "-" * 70)
+        print("DEMONSTRACAO DIDATICA - cenario com conexao critica:")
+        print("-" * 70)
+        print("  Dois setores (triangulos A e B) ligados por uma unica ponte A3-B1.")
+        demo_graph = self._build_demo_bridge_graph()
+        demo_points = NetworkAnalysis(demo_graph).detect_critical_points()
+        if demo_points:
+            print(f"\n  Pontos de articulacao detectados ({len(demo_points)}):")
+            for p in demo_points:
+                module = demo_graph.get_module(p)
+                if module:
+                    print(f"    * {module.name} (ID: {p})")
+            print("\n  Remover qualquer um deles desconecta a rede de exemplo,")
+            print("  comprovando que o algoritmo identifica conexoes criticas reais.")
+
         print("\n" + "=" * 70)
         input("\nPressione ENTER para continuar...")
-    
+
+    def _build_demo_bridge_graph(self) -> InfrastructureGraph:
+        """
+        Builds a small didactic graph that contains articulation points.
+        Two triangles (sectors A and B) joined by a single bridge edge A3-B1,
+        so A3 and B1 are critical: removing either disconnects the network.
+        """
+        demo = InfrastructureGraph()
+        specs = [
+            ("A1", "Setor-A No 1"),
+            ("A2", "Setor-A No 2"),
+            ("A3", "Setor-A No 3 (ponte)"),
+            ("B1", "Setor-B No 1 (ponte)"),
+            ("B2", "Setor-B No 2"),
+            ("B3", "Setor-B No 3"),
+        ]
+        for mod_id, name in specs:
+            demo.add_module(Module(mod_id, name, 10, 5, 10, 5, "active"))
+        connections = [
+            ("A1", "A2"), ("A2", "A3"), ("A3", "A1"),  # triangulo A
+            ("B1", "B2"), ("B2", "B3"), ("B3", "B1"),  # triangulo B
+            ("A3", "B1"),                                # unica ponte
+        ]
+        for id1, id2 in connections:
+            demo.add_connection(id1, id2, 1)
+        return demo
+
     def _analyze_centrality(self):
         """Analyzes module centrality."""
         self._clear_screen()
