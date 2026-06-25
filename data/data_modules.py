@@ -1,23 +1,29 @@
 """
-Default data for the colony Aurora Siger.
+Standard data for Aurora Siger colony modules and connections.
 """
 
+# ==================== MODULE DATA ====================
+# Format: (id, name, energy_consumption, priority, storage_capacity, communication_need, status)
 DEFAULT_MODULES = [
-    ("HAB-01", "Habitação", 85, 9, 30, 5, "ativo"),
-    ("CTR-01", "Centro de Controle", 120, 10, 15, 10, "ativo"),
-    ("ARM-01", "Armazenamento de Energia", 45, 8, 500, 3, "ativo"),
-    ("OXI-01", "Produção de Oxigênio", 100, 10, 40, 4, "ativo"),
-    ("MED-01", "Suporte Médico", 65, 9, 8, 7, "ativo"),
+    # Critical infrastructure modules (high priority)
+    ("HAB-01", "Habitacao", 85, 9, 30, 5, "active"),
+    ("CTR-01", "Centro de Controle", 120, 10, 15, 10, "active"),
+    ("ARM-01", "Armazenamento de Energia", 45, 8, 500, 3, "active"),
+    ("OXI-01", "Producao de Oxigenio", 100, 10, 40, 4, "active"),
+    ("MED-01", "Suporte Medico", 65, 9, 8, 7, "active"),
     
-    ("COM-01", "Comunicação", 75, 8, 5, 10, "ativo"),
-    ("AGR-01", "Agricultura", 95, 7, 20, 6, "ativo"),
-    ("LAB-01", "Laboratório Científico", 110, 6, 10, 8, "ativo"),
-
-    ("REC-01", "Centro de Recreação", 40, 4, 2, 3, "ativo"),
-    ("MAN-01", "Oficina de Manutenção", 50, 5, 5, 4, "ativo"),
+    # Support modules (medium priority)
+    ("COM-01", "Comunicacao", 75, 8, 5, 10, "active"),
+    ("AGR-01", "Agricultura", 95, 7, 20, 6, "active"),
+    ("LAB-01", "Laboratorio Cientifico", 110, 6, 10, 8, "active"),
+    
+    # Additional modules (low priority)
+    ("REC-01", "Centro de Recreacao", 40, 4, 2, 3, "active"),
+    ("MAN-01", "Oficina de Manutencao", 50, 5, 5, 4, "active"),
 ]
 
-POSITIONS_MODULES = {
+# Dictionary with module positions for visualization
+MODULE_POSITIONS = {
     "HAB-01": (0, 0),
     "CTR-01": (2, 0),
     "ARM-01": (1, 1),
@@ -30,7 +36,10 @@ POSITIONS_MODULES = {
     "MAN-01": (3, 3),
 }
 
-CONNECTIONS_DEFAULT = [
+# ==================== CONNECTION DATA ====================
+# Format: (id1, id2, weight)
+DEFAULT_CONNECTIONS = [
+    # Main connections (critical)
     ("HAB-01", "CTR-01", 2),
     ("HAB-01", "MED-01", 1),
     ("HAB-01", "ARM-01", 3),
@@ -41,6 +50,7 @@ CONNECTIONS_DEFAULT = [
     ("ARM-01", "AGR-01", 2),
     ("MED-01", "OXI-01", 2),
     
+    # Secondary connections
     ("HAB-01", "AGR-01", 4),
     ("AGR-01", "LAB-01", 2),
     ("AGR-01", "OXI-01", 3),
@@ -48,6 +58,7 @@ CONNECTIONS_DEFAULT = [
     ("COM-01", "MED-01", 3),
     ("CTR-01", "MED-01", 3),
     
+    # Additional connections
     ("REC-01", "LAB-01", 2),
     ("REC-01", "COM-01", 3),
     ("MAN-01", "ARM-01", 2),
@@ -55,20 +66,21 @@ CONNECTIONS_DEFAULT = [
     ("MAN-01", "OXI-01", 2),
 ]
 
-TYPES_CONNECTIONS = {
-    "HAB-01-CTR-01": "energia",
-    "HAB-01-MED-01": "dados",
-    "HAB-01-ARM-01": "energia",
-    "CTR-01-ARM-01": "energia",
-    "CTR-01-COM-01": "dados",
-    "CTR-01-LAB-01": "dados",
-    "ARM-01-OXI-01": "energia",
-    "ARM-01-AGR-01": "energia",
-    "MED-01-OXI-01": "vida",
-    "HAB-01-AGR-01": "dados",
-    "AGR-01-LAB-01": "dados",
-    "AGR-01-OXI-01": "vida",
-    "LAB-01-COM-01": "dados",
-    "COM-01-MED-01": "dados",
-    "CTR-01-MED-01": "dados",
+# Dictionary with connection types
+CONNECTION_TYPES = {
+    "HAB-01-CTR-01": "energy",
+    "HAB-01-MED-01": "data",
+    "HAB-01-ARM-01": "energy",
+    "CTR-01-ARM-01": "energy",
+    "CTR-01-COM-01": "data",
+    "CTR-01-LAB-01": "data",
+    "ARM-01-OXI-01": "energy",
+    "ARM-01-AGR-01": "energy",
+    "MED-01-OXI-01": "life",
+    "HAB-01-AGR-01": "data",
+    "AGR-01-LAB-01": "data",
+    "AGR-01-OXI-01": "life",
+    "LAB-01-COM-01": "data",
+    "COM-01-MED-01": "data",
+    "CTR-01-MED-01": "data",
 }

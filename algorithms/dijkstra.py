@@ -1,114 +1,197 @@
 """
-Dijkstra's algorithm implementation for finding the shortest path in a graph.
+Dijkstra's algorithm for shortest path.
 """
 
 import heapq
-from typing import Dict, List, Tuple, Optional
+from typing import List, Tuple, Dict
 from modules.grafo import InfrastructureGraph
 
 class Dijkstra:
     """
-    Implementation of the Dijkstra's algorithm for the shortest path possible.
-    Utilizes heap (priority queue) for optimization and efficiency. 
+    Implements Dijkstra's algorithm to find the shortest path.
+    Uses heap (priority queue) for optimization.
     """
     
     def __init__(self, graph: InfrastructureGraph):
         self.graph = graph
-
-    def shortest_path(self, start: str, end: str) -> Tuple[Optional[List[str]], Optional[float]]:
+    
+    def find_path(self, origin: str, destination: str) -> Tuple[List[str], float]:
         """
-        Finds the shortest path from start to end using Dijkstra's algorithm.
+        Finds the shortest path between origin and destination.
         
         Args:
-            start (str): The starting module ID.
-            end (str): The destination module ID.
-        Returns:
-            Tuple[Optional[List[str]], Optional[float]]: The shortest path as a list of module IDs and the total distance.
+            origin: Source module ID
+            destination: Destination module ID
             
+        Returns:
+            Tuple (path, total_distance)
         """
-        if start not in self.graph.modules or end not in self.graph.modules:
-            return [],float('inf') # Return empty path and infinite distance if start or end module does not exist in the graph.
+        if origin not in self.graph.modules or destination not in self.graph.modules:
+            return [], float('inf')
         
-        if start == end:
-            return [start],0.0
+        if origin == destination:
+            return [origin], 0.0
         
-        distances = {module_id: float('inf') for module_id in self.graph.modules}
-        distances[start] = 0
-        previous_nodes = {start: None} # Keep track of the previous node for path reconstruction
+        # Initializes distances
+        distances = {module: float('inf') for module in self.graph.modules}
+        distances[origin] = 0
+        previous = {origin: None}
         
-        # Priority queue to store (distance, module_id) tuples
-        
-        priority_queue = [(0, start)]
+        # Priority queue: (distance, module_id)
+        heap = [(0, origin)]
         visited = set()
         
-        print("=" * 60)
-        print(f"Starting Dijkstra's algorithm from {start} to {end}")
-        print("=" * 60)
+        print(f"\n=== Dijkstra - Caminho Minimo ===")
+        print(f"Origem: {self.graph.modules[origin].name}")
+        print(f"Destino: {self.graph.modules[destination].name}")
+        print("-" * 50)
+        print("Processando vertices:")
         
-        print("Processing edges:")
-        
-        while priority_queue: 
+        while heap:
+            current_dist, current = heapq.heappop(heap)
             
-            current_distance, current_module = heapq.heappop(priority_queue)
+            if current in visited:
+                continue
             
-            if start == end:
+            visited.add(current)
+            print(f"  * {self.graph.modules[current].name} (distancia: {current_dist:.2f})")
+            
+            if current == destination:
                 break
             
-            for neighbor in self.graph.adjacency_list[current_module]:
-                
+            for neighbor in self.graph.get_neighbors(current):
                 if neighbor in visited:
                     continue
                 
-                edge_weight = self.graph.edges_weights.get(current_module , neighbor)
-                
-                if edge_weight == float('inf'):
+                weight = self.graph.get_weight(current, neighbor)
+                if weight == float('inf'):
                     continue
-                
-                new_distance = current_distance + edge_weight
-                
-                # Update the distance if a shorter path is found
-                if new_distance < distances[neighbor]:
-                    distances[neighbor] = new_distance
-                    previous_nodes[neighbor] = current_module
-                    heapq.heappush(priority_queue, (new_distance, neighbor))
                     
-                    print(f"Edge: {current_module} -> {neighbor}, Weight: {edge_weight}, New Distance: {new_distance}")
-                    
-                if distances[end] == float('inf'):
-                    print(f"No path found from {start} to {end}.")
-                    return [], float('inf')
+                new_dist = current_dist + weight
                 
-                path = []
-                current = end
-                while current is not None: 
-                    path.append(current)
-                    current = previous_nodes.get(current)
-                path.reverse()
-                
-                
-                print(f"Shortest path from {start} to {end}: {' -> '.join(path)} with total distance: {distances[end]}")
-                
-                return (path, distances[end])
-            
-    def get_all_paths(self,start:str) -> Dict[str, Tuple[List[str], float]]:
-        """
-        Get the shortest paths from the start module to all other modules in the graph.
+                if new_dist < distances[neighbor]:
+                    distances[neighbor] = new_dist
+                    previous[neighbor] = current
+                    heapq.heappush(heap, (new_dist, neighbor))
         
-        Args:
-            start (str): The starting module ID.
-        Returns:
-            Dict[str, Tuple[List[str], float]]: A dictionary where keys are module IDs and values are tuples containing the shortest path and its distance.
-        """
+        # Reconstructs the path
+        if distances[destination] == float('inf'):
+            print("\nDestino inalcancavel!")
+            return [], float('inf')
         
+        path = []
+        current = destination
+        while current is not None:
+            path.append(current)
+            current = previous.get(current)
+        path.reverse()
+        
+        print(f"\nCaminho encontrado:")
+        print(f"   {' -> '.join([self.graph.modules[m].name for m in path])}")
+        print(f"   Distancia total: {distances[destination]:.2f}")
+        
+        return path, distances[destination]
+    
+    def find_all_paths(self, origin: str) -> Dict[str, Tuple[List[str], float]]:
+        """
+        Finds the shortest paths from origin to all other vertices.
+        """
         results = {}
         
-        if start not in self.graph.modules:
-            print(f"Start module {start} does not exist in the graph.")
-            return results
-        
-        for end in self.graph.modules:
-            if start != end:
-                path, distance = self.shortest_path(start, end)
-                results[end] = (path, distance)
+        for destination in self.graph.modules:
+            if destination != origin:
+                path, distance = self.find_path(origin, destination)
+                if path:
+                    results[destination] = (path, distance)
         
         return results
+    
+    def find_path_with_constraints(self, origin: str, destination: str, 
+                                   min_priority: int = 0) -> Tuple[List[str], float]:
+        """
+        Finds the shortest path considering priority constraints.
+        Modules with priority lower than min_priority are avoided.
+        
+        Args:
+            origin: Source module ID
+            destination: Destination module ID
+            min_priority: Minimum required priority (0-10)
+            
+        Returns:
+            Tuple (path, total_distance)
+        """
+        if origin not in self.graph.modules or destination not in self.graph.modules:
+            return [], float('inf')
+        
+        # Checks if source and destination meet the criteria
+        if self.graph.modules[origin].priority < min_priority:
+            print(f"Modulo de origem nao atende a prioridade minima ({min_priority})")
+            return [], float('inf')
+        
+        if self.graph.modules[destination].priority < min_priority:
+            print(f"Modulo de destino nao atende a prioridade minima ({min_priority})")
+            return [], float('inf')
+        
+        # Initializes distances
+        distances = {module: float('inf') for module in self.graph.modules}
+        distances[origin] = 0
+        previous = {origin: None}
+        
+        heap = [(0, origin)]
+        visited = set()
+        
+        print(f"\n=== Dijkstra com Restricao de Prioridade (min: {min_priority}) ===")
+        print(f"Origem: {self.graph.modules[origin].name}")
+        print(f"Destino: {self.graph.modules[destination].name}")
+        print("-" * 50)
+        print("Processando vertices:")
+        
+        while heap:
+            current_dist, current = heapq.heappop(heap)
+            
+            if current in visited:
+                continue
+            
+            visited.add(current)
+            print(f"  * {self.graph.modules[current].name} (distancia: {current_dist:.2f})")
+            
+            if current == destination:
+                break
+            
+            for neighbor in self.graph.get_neighbors(current):
+                if neighbor in visited:
+                    continue
+                
+                # Checks if neighbor meets minimum priority
+                if self.graph.modules[neighbor].priority < min_priority:
+                    print(f"    - {self.graph.modules[neighbor].name} ignorado (prioridade {self.graph.modules[neighbor].priority} < {min_priority})")
+                    continue
+                
+                weight = self.graph.get_weight(current, neighbor)
+                if weight == float('inf'):
+                    continue
+                    
+                new_dist = current_dist + weight
+                
+                if new_dist < distances[neighbor]:
+                    distances[neighbor] = new_dist
+                    previous[neighbor] = current
+                    heapq.heappush(heap, (new_dist, neighbor))
+        
+        # Reconstructs the path
+        if distances[destination] == float('inf'):
+            print("\nDestino inalcancavel com as restricoes!")
+            return [], float('inf')
+        
+        path = []
+        current = destination
+        while current is not None:
+            path.append(current)
+            current = previous.get(current)
+        path.reverse()
+        
+        print(f"\nCaminho encontrado:")
+        print(f"   {' -> '.join([self.graph.modules[m].name for m in path])}")
+        print(f"   Distancia total: {distances[destination]:.2f}")
+        
+        return path, distances[destination]
