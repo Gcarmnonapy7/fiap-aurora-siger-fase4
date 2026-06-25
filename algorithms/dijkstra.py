@@ -15,14 +15,17 @@ class Dijkstra:
     def __init__(self, graph: InfrastructureGraph):
         self.graph = graph
     
-    def find_path(self, origin: str, destination: str) -> Tuple[List[str], float]:
+    def find_path(self, origin: str, destination: str,
+                  verbose: bool = True) -> Tuple[List[str], float]:
         """
         Finds the shortest path between origin and destination.
-        
+
         Args:
             origin: Source module ID
             destination: Destination module ID
-            
+            verbose: When True, prints the step-by-step trace (default).
+                     Set False for batch use (e.g. find_all_paths).
+
         Returns:
             Tuple (path, total_distance)
         """
@@ -41,21 +44,23 @@ class Dijkstra:
         heap = [(0, origin)]
         visited = set()
         
-        print(f"\n=== Dijkstra - Caminho Minimo ===")
-        print(f"Origem: {self.graph.modules[origin].name}")
-        print(f"Destino: {self.graph.modules[destination].name}")
-        print("-" * 50)
-        print("Processando vertices:")
-        
+        if verbose:
+            print(f"\n=== Dijkstra - Caminho Minimo ===")
+            print(f"Origem: {self.graph.modules[origin].name}")
+            print(f"Destino: {self.graph.modules[destination].name}")
+            print("-" * 50)
+            print("Processando vertices:")
+
         while heap:
             current_dist, current = heapq.heappop(heap)
-            
+
             if current in visited:
                 continue
-            
+
             visited.add(current)
-            print(f"  * {self.graph.modules[current].name} (distancia: {current_dist:.2f})")
-            
+            if verbose:
+                print(f"  * {self.graph.modules[current].name} (distancia: {current_dist:.2f})")
+
             if current == destination:
                 break
             
@@ -76,34 +81,38 @@ class Dijkstra:
         
         # Reconstructs the path
         if distances[destination] == float('inf'):
-            print("\nDestino inalcancavel!")
+            if verbose:
+                print("\nDestino inalcancavel!")
             return [], float('inf')
-        
+
         path = []
         current = destination
         while current is not None:
             path.append(current)
             current = previous.get(current)
         path.reverse()
-        
-        print(f"\nCaminho encontrado:")
-        print(f"   {' -> '.join([self.graph.modules[m].name for m in path])}")
-        print(f"   Distancia total: {distances[destination]:.2f}")
-        
+
+        if verbose:
+            print(f"\nCaminho encontrado:")
+            print(f"   {' -> '.join([self.graph.modules[m].name for m in path])}")
+            print(f"   Distancia total: {distances[destination]:.2f}")
+
         return path, distances[destination]
-    
+
     def find_all_paths(self, origin: str) -> Dict[str, Tuple[List[str], float]]:
         """
         Finds the shortest paths from origin to all other vertices.
+        Runs each search quietly (verbose=False) so the caller can render
+        a clean summary.
         """
         results = {}
-        
+
         for destination in self.graph.modules:
             if destination != origin:
-                path, distance = self.find_path(origin, destination)
+                path, distance = self.find_path(origin, destination, verbose=False)
                 if path:
                     results[destination] = (path, distance)
-        
+
         return results
     
     def find_path_with_constraints(self, origin: str, destination: str, 
