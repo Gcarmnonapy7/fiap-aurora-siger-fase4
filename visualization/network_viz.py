@@ -44,6 +44,38 @@ class NetworkVisualization:
         
         return "\n".join(description)
     
+    def generate_adjacency_matrix(self) -> str:
+        """
+        Generates a textual view of the adjacency matrix (edge weights).
+        Reads graph.get_adjacency_matrix(), exercising the matrix representation
+        (O(1) random access to any pair's weight) that complements the
+        adjacency list used by the search algorithms.
+        """
+        matrix = self.graph.get_adjacency_matrix()
+        modules = self.graph.module_list
+        n = len(modules)
+
+        lines = []
+        lines.append("MATRIZ DE ADJACENCIA (pesos das conexoes; 0 = sem conexao):")
+        lines.append("-" * 58)
+
+        # Header row with column indices
+        header = "     " + "".join(f"{j + 1:>4}" for j in range(n))
+        lines.append(header)
+
+        # One row per module, cells = edge weight between i and j
+        for i in range(n):
+            cells = "".join(f"{int(matrix[i][j]):>4}" for j in range(n))
+            lines.append(f"{i + 1:>3}.{cells}")
+
+        # Index legend so the numeric headers can be read
+        lines.append("")
+        lines.append("Indices:")
+        for i, module in enumerate(modules):
+            lines.append(f"  {i + 1:>2}. {module.name} ({module.id})")
+
+        return "\n".join(lines)
+
     def generate_graph_structure(self) -> str:
         """
         Generates a graph structure representation.

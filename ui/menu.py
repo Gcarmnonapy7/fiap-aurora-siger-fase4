@@ -64,6 +64,8 @@ class MenuSIGIC:
                     self._menu_complete_analysis()
                 elif option == '8':
                     self._display_about()
+                elif option == '9':
+                    self._menu_adjacency_matrix()
                 else:
                     self._display_error("Opcao invalida! Tente novamente.")
                     
@@ -100,6 +102,7 @@ class MenuSIGIC:
         print(" 6. Simulacoes Operacionais")
         print(" 7. Analise Completa")
         print(" 8. Sobre o Sistema")
+        print(" 9. Matriz de Adjacencia")
         print(" 0. Sair")
         print("=" * 70)
     
@@ -855,7 +858,7 @@ class MenuSIGIC:
             print(f"Consumo inicial: {analysis['initial_consumption']:.2f} kWh")
             print(f"Consumo final: {analysis['final_consumption']:.2f} kWh")
             print(f"Crescimento total: {analysis['total_growth']:.1f}%")
-            print(f"Taxa media de crescimento: {analysis['avg_growth_rate']:.2f}%")
+            print(f"Taxa de crescimento anual: {analysis['avg_growth_rate']:.2f}%")
             
             if analysis['inflection_points']:
                 print(f"Pontos de inflexao detectados: {analysis['inflection_points']}")
@@ -1219,6 +1222,20 @@ class MenuSIGIC:
     
     # ==================== UTILITY FUNCTIONS ====================
     
+    def _menu_adjacency_matrix(self):
+        """Displays the adjacency matrix of the network."""
+        self._clear_screen()
+        print("\n" + "=" * 70)
+        print("MATRIZ DE ADJACENCIA")
+        print("=" * 70)
+        print()
+        print(self.visualization.generate_adjacency_matrix())
+        print("\n" + "=" * 70)
+        print("A matriz complementa a lista de adjacencia: permite consultar em")
+        print("tempo O(1) o peso da conexao entre quaisquer dois modulos.")
+        print("=" * 70)
+        input("\nPressione ENTER para continuar...")
+
     def _display_error(self, message: str):
         """Displays an error message."""
         print(f"\n[ERRO] {message}")
